@@ -46,7 +46,27 @@ def step_impl(context):
     #
     # load the database with new products
     #
-    for row in context.table:
         #
         # ADD YOUR CODE HERE TO CREATE PRODUCTS VIA THE REST API
         #
+        
+    # Load products from the feature file's Background table
+    for row in context.table:
+        product = {
+            "name": row["name"],
+            "description": row["description"],
+            "price": row["price"],
+            "available": row["available"].lower() == "true",
+            "category": row["category"],
+        }
+
+        response = context.res.post(
+            "/products",
+            json=product,
+        )
+
+        assert response.status_code == 201, (
+            f"Failed to create product {product['name']}: "
+            f"{response.status_code} {response.text}"
+        )
+

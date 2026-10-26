@@ -104,3 +104,114 @@ class TestProductModel(unittest.TestCase):
     #
     # ADD YOUR TEST CASES HERE
     #
+    
+    def test_read_a_product(self):
+        """It should Read a Product"""
+        app.logger.info("Test Read a Product")
+        product = ProductFactory()
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+
+        found_product = Product.find(product.id)
+        self.assertIsNotNone(found_product)
+        self.assertEqual(found_product.id, product.id)
+        self.assertEqual(found_product.name, product.name)
+        self.assertEqual(found_product.description, product.description)
+        self.assertEqual(Decimal(found_product.price), product.price)
+        self.assertEqual(found_product.available, product.available)
+        self.assertEqual(found_product.category, product.category)
+
+    def test_update_a_product(self):
+        """It should Update a Product"""
+        product = ProductFactory()
+        product.id = None
+        product.create()
+
+        product.name = "Updated Product"
+        product.description = "Updated description"
+        product.price = Decimal("25.50")
+        product.available = False
+        product.category = Category.TOOLS
+        product.update()
+
+        found_product = Product.find(product.id)
+        self.assertEqual(found_product.name, "Updated Product")
+        self.assertEqual(found_product.description, "Updated description")
+        self.assertEqual(found_product.price, Decimal("25.50"))
+        self.assertFalse(found_product.available)
+        self.assertEqual(found_product.category, Category.TOOLS)
+
+    def test_delete_a_product(self):
+        """It should Delete a Product"""
+        product = ProductFactory()
+        product.id = None
+        product.create()
+        self.assertIsNotNone(Product.find(product.id))
+
+        product.delete()
+        self.assertIsNone(Product.find(product.id))
+
+    def test_list_all_products(self):
+        """It should List all Products"""
+        self.assertEqual(Product.all(), [])
+
+        product1 = ProductFactory()
+        product1.id = None
+        product1.create()
+
+        product2 = ProductFactory()
+        product2.id = None
+        product2.create()
+
+        products = Product.all()
+        self.assertEqual(len(products), 2)
+
+    def test_find_by_name(self):
+        """It should Find Products by Name"""
+        product = ProductFactory()
+        product.id = None
+        product.name = "Test Product"
+        product.create()
+
+        products = Product.find_by_name("Test Product").all()
+        self.assertEqual(len(products), 1)
+        self.assertEqual(products[0].name, "Test Product")
+
+    def test_find_by_category(self):
+        """It should Find Products by Category"""
+        product = ProductFactory()
+        product.id = None
+        product.category = Category.FOOD
+        product.create()
+
+        products = Product.find_by_category(Category.FOOD).all()
+        self.assertGreaterEqual(len(products), 1)
+        self.assertTrue(
+            all(item.category == Category.FOOD for item in products)
+        )
+
+    def test_find_by_availability(self):
+        """It should Find Products by Availability"""
+        available_product = ProductFactory()
+        available_product.id = None
+        available_product.available = True
+        available_product.create()
+
+        unavailable_product = ProductFactory()
+        unavailable_product.id = None
+        unavailable_product.available = False
+        unavailable_product.create()
+
+        available_products = Product.find_by_availability(True).all()
+        unavailable_products = Product.find_by_availability(False).all()
+
+        self.assertTrue(
+            all(item.available is True for item in available_products)
+        )
+        self.assertTrue(
+            all(item.available is False for item in unavailable_products)
+        )
+        self.assertIn(available_product, available_products)
+        self.assertIn(unavailable_product, unavailable_products)
+
